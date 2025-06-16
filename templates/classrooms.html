@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}Classrooms - University Timetable Scheduler{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Classroom Management</h2>
+            <div>
+                <a href="{{ url_for('classrooms.add_classroom') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i> Add Classroom
+                </a>
+                <button type="button" class="btn btn-outline-primary ms-2" data-bs-toggle="modal" data-bs-target="#uploadModal">
+                    <i class="fas fa-upload me-2"></i> Import CSV
+                </button>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header bg-white py-3">
+                <div class="d-flex justify-content-between">
+                    <h5 class="mb-0">Classroom List</h5>
+                    <div class="input-group" style="width: 300px;">
+                        <input type="text" id="classroomSearch" class="form-control" placeholder="Search classrooms...">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if classrooms %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Capacity</th>
+                                    <th>Utilization</th>
+                                    <th>Assigned Courses</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for classroom in classrooms %}
+                                    <tr class="classroom-row">
+                                        <td><strong>{{ classroom.name }}</strong></td>
+                                        <td>{{ classroom.capacity }} students</td>
+                                        <td>
+                                            {% set course_count = classroom.courses|length %}
+                                            {% if course_count > 0 %}
+                                                {% set utilization = (course_count * 100 / 10)|round|int %}
+                                                {% if utilization <= 50 %}
+                                                    <span class="badge bg-success">{{ utilization }}%</span>
+                                                {% elif utilization <= 80 %}
+                                                    <span class="badge bg-warning">{{ utilization }}%</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">{{ utilization }}%</span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="badge bg-secondary">0%</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ classroom.courses|length }}</td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <a href="{{ url_for('classrooms.edit_classroom', classroom_id=classroom.id) }}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-edit"></i> Edit
+                                                </a>
+                                                <form action="{{ url_for('classrooms.delete_classroom', classroom_id=classroom.id) }}" method="post" class="d-inline ms-1"
+                                                      onsubmit="return confirm('Are you sure you want to delete this classroom?');">
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                        <i class="fas fa-trash"></i> Delete
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <img src="https://cdn-icons-png.flaticon.com/512/1067/1067256.png" alt="No classrooms" style="max-width: 120px; opacity: 0.2;" class="mb-3">
+                        <h5 class="text-muted">No classrooms found</h5>
+                        <p class="mb-0">Click "Add Classroom" to create your first classroom.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CSV Upload Modal -->
+<div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="uploadModalLabel">Import Classrooms from CSV</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('data_import.upload_data') }}" method="post" enctype="multipart/form-data">
+                <div class="modal-body">                    <div class="mb-3">
+                        <label for="csvFile" class="form-label">Choose CSV File</label>
+                        <input type="file" class="form-control" id="csvFile" name="fileUpload" accept=".csv" required>
+                        <input type="hidden" name="dataType" value="classrooms">
+                    </div>
+                    <div class="alert alert-info">
+                        <h6>CSV Format Requirements:</h6>
+                        <ul class="mb-0">
+                            <li>Columns: name, capacity</li>
+                            <li>Example: "Room 101", 30</li>
+                            <li>First row should contain headers</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Import Classrooms</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Classroom search functionality
+        const searchInput = document.getElementById('classroomSearch');
+        const classroomRows = document.querySelectorAll('.classroom-row');
+        
+        searchInput.addEventListener('keyup', function() {
+            const searchTerm = this.value.toLowerCase();
+            
+            classroomRows.forEach(row => {
+                const name = row.cells[0].textContent.toLowerCase();
+                const capacity = row.cells[1].textContent.toLowerCase();
+                
+                if (name.includes(searchTerm) || capacity.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

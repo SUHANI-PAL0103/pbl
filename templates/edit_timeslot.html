@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Time Slot - University Timetable Scheduler{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Edit Time Slot</h2>
+            <a href="{{ url_for('timeslots.timeslots') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i> Back to Time Slots
+            </a>
+        </div>
+    </div>
+    
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Time Slot Information</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('timeslots.edit_timeslot', timeslot_id=timeslot.id) }}" method="post">
+                    <div class="mb-3">
+                        <label for="day" class="form-label">Day of Week</label>
+                        <select class="form-select" id="day" name="day" required>
+                            <option value="Monday" {% if timeslot.day == 'Monday' %}selected{% endif %}>Monday</option>
+                            <option value="Tuesday" {% if timeslot.day == 'Tuesday' %}selected{% endif %}>Tuesday</option>
+                            <option value="Wednesday" {% if timeslot.day == 'Wednesday' %}selected{% endif %}>Wednesday</option>
+                            <option value="Thursday" {% if timeslot.day == 'Thursday' %}selected{% endif %}>Thursday</option>
+                            <option value="Friday" {% if timeslot.day == 'Friday' %}selected{% endif %}>Friday</option>
+                            <option value="Saturday" {% if timeslot.day == 'Saturday' %}selected{% endif %}>Saturday</option>
+                            <option value="Sunday" {% if timeslot.day == 'Sunday' %}selected{% endif %}>Sunday</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="start_time" class="form-label">Start Time</label>
+                        <input type="time" class="form-control" id="start_time" name="start_time" 
+                               value="{{ timeslot.start_time.strftime('%H:%M') }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="end_time" class="form-label">End Time</label>
+                        <input type="time" class="form-control" id="end_time" name="end_time" 
+                               value="{{ timeslot.end_time.strftime('%H:%M') }}" required>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{{ url_for('timeslots.timeslots') }}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Update Time Slot</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        {% if timeslot.courses %}
+        <div class="card mt-4">
+            <div class="card-header bg-warning text-white">
+                <h5 class="mb-0">Assigned Courses</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <strong>Warning:</strong> This time slot has {{ timeslot.courses|length }} course(s) assigned to it. 
+                    Changing the time may affect the schedule.
+                </div>
+                <div class="list-group">
+                    {% for course in timeslot.courses %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ course.code }}</strong>: {{ course.name }}
+                                {% if course.instructor %}
+                                    <br><small class="text-muted">Instructor: {{ course.instructor.name }}</small>
+                                {% endif %}
+                            </div>
+                            {% if course.classroom %}
+                                <span class="badge bg-info">{{ course.classroom.name }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

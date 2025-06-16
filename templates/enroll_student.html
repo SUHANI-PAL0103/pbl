@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block title %}Enroll Student - University Timetable Scheduler{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h2>Enroll Student: {{ student.name }}</h2>
+        <p class="lead">Manage course enrollments for this student</p>
+        <hr>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card shadow">
+            <div class="card-header bg-gradient text-white">
+                <h5 class="mb-0">Course Enrollment</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('students.enroll_student', student_id=student.id) }}" method="post">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="form-text mb-2">
+                                <strong>Student:</strong> {{ student.name }} ({{ student.email }})
+                            </div>
+                            <div class="form-text">
+                                Select the courses this student should be enrolled in. You can select multiple courses.
+                            </div>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-outline-secondary btn-sm" id="select-all">Select All</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" id="deselect-all">Deselect All</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if courses %}
+                        <div class="row">
+                            {% for course in courses %}
+                                <div class="col-md-4 mb-3">
+                                    <div class="card h-100 {% if course in student.courses %}border-primary{% endif %}">
+                                        <div class="card-body">
+                                            <div class="form-check">                                                <input class="form-check-input course-checkbox" type="checkbox" 
+                                                    name="course_ids" value="{{ course.id }}" id="course-{{ course.id }}"
+                                                    {% if course in student.courses %}checked{% endif %}>
+                                                <label class="form-check-label" for="course-{{ course.id }}">
+                                                    <strong>{{ course.code }}</strong>: {{ course.name }}
+                                                </label>
+                                            </div>
+                                            <div class="mt-2 small text-muted">
+                                                {% if course.instructor %}
+                                                    <div>Instructor: {{ course.instructor.name }}</div>
+                                                {% endif %}
+                                                <div>Students enrolled: {{ course.students|length }}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning">
+                            <p class="mb-0">No courses are available. Please add courses before enrolling students.</p>
+                        </div>
+                    {% endif %}                    <div class="d-flex justify-content-between mt-4">
+                        <button type="submit" class="btn btn-primary">Save Enrollment</button>
+                        <a href="{{ url_for('students.students') }}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>        </div>
+    </div>
+</div>
+
+<!-- Student Timetable Section -->
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card shadow">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">{{ student.name }}'s Current Timetable</h5>
+            </div>
+            <div class="card-body">
+                {% if student.courses %}
+                    {% set scheduled_courses = [] %}
+                    {% set unscheduled_courses = [] %}
+                    {% for course in student.courses %}
+                        {% if course.time_slot and course.classroom %}
+                            {% set _ = scheduled_courses.append(course) %}
+                        {% else %}
+                            {% set _ = unscheduled_courses.append(course) %}
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if scheduled_courses %}
+                        <h6 class="text-success">Scheduled Classes</h6>
+                        <div class="table-responsive mb-4">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Course</th>
+                                        <th>Day</th>
+                                        <th>Time</th>
+                                        <th>Classroom</th>
+                                        <th>Instructor</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for course in scheduled_courses|sort(attribute='time_slot.day')|sort(attribute='time_slot.start_time') %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ course.code }}</strong><br>
+                                                <small class="text-muted">{{ course.name }}</small>
+                                            </td>
+                                            <td>{{ course.time_slot.day }}</td>
+                                            <td>
+                                                {{ course.time_slot.start_time.strftime('%H:%M') }} - 
+                                                {{ course.time_slot.end_time.strftime('%H:%M') }}
+                                            </td>
+                                            <td>{{ course.classroom.name }}</td>
+                                            <td>
+                                                {% if course.instructor %}
+                                                    {{ course.instructor.name }}
+                                                {% else %}
+                                                    <span class="text-muted">No instructor assigned</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endif %}
+                    
+                    {% if unscheduled_courses %}
+                        <h6 class="text-warning">Unscheduled Courses</h6>
+                        <div class="alert alert-warning">
+                            <p class="mb-2">The following courses are enrolled but not yet scheduled:</p>
+                            <ul class="mb-0">
+                                {% for course in unscheduled_courses %}
+                                    <li>
+                                        <strong>{{ course.code }}</strong>: {{ course.name }}
+                                        {% if course.instructor %} ({{ course.instructor.name }}){% endif %}
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                            <hr>
+                            <p class="mb-0">
+                                <i class="fas fa-info-circle"></i> 
+                                These courses need to be scheduled through the 
+                                <a href="{{ url_for('scheduler.scheduler_view') }}" class="alert-link">Scheduler</a>.
+                            </p>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        This student is not enrolled in any courses yet. Select courses above to create their schedule.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Select/Deselect All functionality
+        const selectAllBtn = document.getElementById('select-all');
+        const deselectAllBtn = document.getElementById('deselect-all');
+        const courseCheckboxes = document.querySelectorAll('.course-checkbox');
+        
+        if (selectAllBtn) {
+            selectAllBtn.addEventListener('click', function() {
+                courseCheckboxes.forEach(function(checkbox) {
+                    checkbox.checked = true;
+                });
+            });
+        }
+        
+        if (deselectAllBtn) {
+            deselectAllBtn.addEventListener('click', function() {
+                courseCheckboxes.forEach(function(checkbox) {
+                    checkbox.checked = false;
+                });
+            });
+        }
+        
+        // Highlight selected courses
+        courseCheckboxes.forEach(function(checkbox) {
+            checkbox.addEventListener('change', function() {
+                const card = this.closest('.card');
+                if (this.checked) {
+                    card.classList.add('border-primary');
+                } else {
+                    card.classList.remove('border-primary');
+                }
+            });
+        });
+    });
+</script>
+{% endblock %} 
