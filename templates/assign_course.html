@@ -81,13 +81,11 @@
     </div>
     
     <div class="col-md-8">
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">Assign Time Slot and Classroom</h5>
+        <div class="card">            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Assign Time Slot, Instructor and Classroom</h5>
             </div>
             <div class="card-body">
-                <form action="{{ url_for('scheduler.assign_course', course_id=course.id) }}" method="post">
-                    <div class="mb-3">
+                <form action="{{ url_for('scheduler.assign_course', course_id=course.id) }}" method="post">                    <div class="mb-3">
                         <label for="time_slot_id" class="form-label">Time Slot</label>
                         <select class="form-select" id="time_slot_id" name="time_slot_id" required>
                             <option value="">Select a time slot</option>
@@ -97,6 +95,36 @@
                                 </option>
                             {% endfor %}
                         </select>
+                    </div>                    <div class="mb-3">
+                        <label for="instructor_id" class="form-label">Instructor</label>
+                        <select class="form-select" id="instructor_id" name="instructor_id">
+                            <option value="">Select an instructor (optional)</option>
+                            {% if instructors %}
+                                {% for instructor in instructors %}
+                                    <option value="{{ instructor.id }}" 
+                                            {% if course.instructor_id == instructor.id %}selected{% endif %}
+                                            data-name="{{ instructor.name }}"
+                                            data-email="{{ instructor.email }}"
+                                            data-department="{{ instructor.department if instructor.department else 'No Department' }}">
+                                        {{ instructor.name }} - {{ instructor.department if instructor.department else 'No Dept' }}
+                                    </option>
+                                {% endfor %}
+                            {% else %}
+                                <option disabled>No instructors available</option>
+                            {% endif %}
+                        </select>
+                        <div class="form-text">
+                            <small id="instructor-info">
+                                {% if instructors %}
+                                    Available instructors: {{ instructors|length }}
+                                    {% if course.instructor %}
+                                        | Current: {{ course.instructor.name }}
+                                    {% endif %}
+                                {% else %}
+                                    No instructors found in database
+                                {% endif %}
+                            </small>
+                        </div>
                     </div>
                     
                     <div class="mb-3">
@@ -110,7 +138,7 @@
                                     {{ classroom.name }} (Capacity: {{ classroom.capacity }})
                                 </option>
                             {% endfor %}
-                        </select>                        <div id="capacity-warning" class="form-text text-danger" style="display: none;">
+                        </select><div id="capacity-warning" class="form-text text-danger" style="display: none;">
                             Warning: The selected classroom capacity is less than the number of students ({{ course.students|length }}).
                         </div>
                     </div>
@@ -140,6 +168,7 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const classroomSelect = document.getElementById('classroom_id');
+        const instructorSelect = document.getElementById('instructor_id');
         const capacityWarning = document.getElementById('capacity-warning');
         const studentCount = parseInt('{{ course.students|length }}', 10);
         
@@ -158,7 +187,7 @@
             }
         });
         
-        // Check initial selection
+        // Check initial classroom selection
         if (classroomSelect.value) {
             const selectedOption = classroomSelect.options[classroomSelect.selectedIndex];
             const capacity = parseInt(selectedOption.getAttribute('data-capacity'));
@@ -166,6 +195,45 @@
                 capacityWarning.style.display = 'block';
             }
         }
+          // Handle instructor selection feedback
+        instructorSelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const instructorInfo = document.getElementById('instructor-info');
+            
+            if (selectedOption.value) {
+                const name = selectedOption.getAttribute('data-name');
+                const email = selectedOption.getAttribute('data-email');
+                const department = selectedOption.getAttribute('data-department');
+                
+                instructorInfo.innerHTML = `Selected: <strong>${name}</strong> (${email}) - ${department}`;
+                instructorInfo.className = 'text-success';
+            } else {
+                instructorInfo.innerHTML = 'Available instructors: {{ instructors|length if instructors else 0 }}';
+                instructorInfo.className = 'text-muted';
+            }
+        });
+        
+        // Form validation before submission
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(e) {
+            const timeSlot = document.getElementById('time_slot_id').value;
+            const classroom = document.getElementById('classroom_id').value;
+            
+            if (!timeSlot || !classroom) {
+                e.preventDefault();
+                alert('Please select both a time slot and classroom before assigning the course.');
+                return false;
+            }
+            
+            // Show confirmation message
+            const instructor = instructorSelect.options[instructorSelect.selectedIndex].text;
+            const confirmMsg = `Assign course to:\nTime: ${document.getElementById('time_slot_id').options[document.getElementById('time_slot_id').selectedIndex].text}\nClassroom: ${document.getElementById('classroom_id').options[document.getElementById('classroom_id').selectedIndex].text}\nInstructor: ${instructor}`;
+            
+            if (!confirm(confirmMsg)) {
+                e.preventDefault();
+                return false;
+            }
+        });
     });
 </script>
-{% endblock %} 
+{% endblock %}

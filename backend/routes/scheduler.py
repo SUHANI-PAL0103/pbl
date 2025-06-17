@@ -218,23 +218,30 @@ def assign_course(course_id):
     if request.method == 'POST':
         time_slot_id = request.form.get('time_slot_id')
         classroom_id = request.form.get('classroom_id')
+        instructor_id = request.form.get('instructor_id')
         
         course.time_slot_id = time_slot_id if time_slot_id else None
         course.classroom_id = classroom_id if classroom_id else None
+        course.instructor_id = instructor_id if instructor_id else None
         
         # Log activity
         activity = Activity(
-            description=f"Assigned course {course.code} to a time slot and classroom",
+            description=f"Assigned course {course.code} to time slot, classroom, and instructor",
             icon="fas fa-tasks"
         )
-        db.session.add(activity)
-        
+        db.session.add(activity)        
         db.session.commit()
         flash('Course assigned successfully!', 'success')
         return redirect(url_for('courses.courses'))
     
     time_slots = TimeSlot.query.all()
     classrooms = Classroom.query.all()
+    instructors = Instructor.query.all()
+    
+    # Debug: Print instructor data
+    print(f"DEBUG: Found {len(instructors)} instructors")
+    for instructor in instructors:
+        print(f"  {instructor.id}: {instructor.name} ({instructor.email})")
     
     # Check for potential conflicts
     conflicts = []
@@ -260,4 +267,5 @@ def assign_course(course_id):
                           course=course, 
                           time_slots=time_slots, 
                           classrooms=classrooms,
+                          instructors=instructors,
                           conflicts=conflicts)
