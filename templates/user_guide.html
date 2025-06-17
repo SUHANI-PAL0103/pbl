@@ -18,10 +18,7 @@
             <a href="#setup-data" class="list-group-item list-group-item-action">Setting Up Data</a>
             <a href="#generate-timetable" class="list-group-item list-group-item-action">Generating Timetable</a>
             <a href="#manual-assignment" class="list-group-item list-group-item-action">Manual Assignment</a>
-            <a href="#manage-conflicts" class="list-group-item list-group-item-action">Managing Conflicts</a>
             <a href="#course-materials" class="list-group-item list-group-item-action">Course Materials</a>
-            <a href="#export-data" class="list-group-item list-group-item-action">Exporting Data</a>
-            <a href="#import-data" class="list-group-item list-group-item-action">Importing Data</a>
             <a href="#troubleshooting" class="list-group-item list-group-item-action">Troubleshooting</a>
         </div>
     </div>
@@ -118,14 +115,7 @@
                 <h4 class="mb-0">Generating Timetable</h4>
             </div>
             <div class="card-body">
-                <h5>Automatic Timetable Generation</h5>
-                <ol>
-                    <li>Go to the <strong>Scheduler</strong> page from the navigation menu</li>
-                    <li>Review the prerequisites to ensure all necessary data is available</li>
-                    <li>Click the <strong>Run Scheduler</strong> button</li>
-                    <li>Wait for the algorithm to complete (this may take a few moments)</li>
-                    <li>You will be redirected to the timetable view to see the results</li>
-                </ol>
+                
                 
                 <div class="alert alert-warning">
                     <i class="fas fa-exclamation-triangle me-2"></i> The scheduler uses a graph coloring algorithm that attempts to find an optimal solution while respecting constraints. However, if there are too many conflicts, some courses may not be scheduled.
@@ -170,37 +160,7 @@
             </div>
         </div>
         
-        <div class="card mb-4" id="manage-conflicts">
-            <div class="card-header bg-primary text-white">
-                <h4 class="mb-0">Managing Conflicts</h4>
-            </div>
-            <div class="card-body">
-                <h5>Viewing Conflicts</h5>
-                <ol>
-                    <li>Go to the <strong>Conflicts</strong> page from the navigation menu</li>
-                    <li>Review the list of conflicts grouped by type (student or instructor)</li>
-                    <li>Each conflict shows the affected courses and the nature of the conflict</li>
-                </ol>
-                
-                <h5>Resolving Conflicts</h5>
-                <p>There are several ways to resolve conflicts:</p>
-                <ul>
-                    <li><strong>Change the time slot:</strong> Manually reassign one of the conflicting courses</li>
-                    <li><strong>Change enrollments:</strong> Adjust student enrollments to reduce conflicts</li>
-                    <li><strong>Add more time slots:</strong> Create additional time slots to provide more options</li>
-                    <li><strong>Add more classrooms:</strong> If classroom availability is a bottleneck</li>
-                </ul>
-                
-                <h5>Using the Conflict Graph</h5>
-                <ol>
-                    <li>Go to the <strong>Graph</strong> page from the navigation menu</li>
-                    <li>The visualization shows courses as nodes and conflicts as edges</li>
-                    <li>Red edges indicate instructor conflicts (higher priority)</li>
-                    <li>Gray edges indicate student conflicts</li>
-                    <li>Use this visual aid to identify clusters of conflicts that need attention</li>
-                </ol>
-            </div>
-        </div>
+        
         
         <div class="card mb-4" id="course-materials">
             <div class="card-header bg-primary text-white">
@@ -215,77 +175,13 @@
                     <li>You'll see a list of existing materials and an upload form</li>
                 </ol>
                 
-                <h5>Uploading New Materials</h5>
-                <ol>
-                    <li>Enter a name for the material</li>
-                    <li>Add an optional description</li>
-                    <li>Select a PDF file from your computer</li>
-                    <li>Click <strong>Upload Material</strong></li>
-                </ol>
-                
-                <h5>Managing Existing Materials</h5>
-                <p>For each uploaded material, you can:</p>
-                <ul>
-                    <li><strong>View:</strong> Open the PDF directly in your browser</li>
-                    <li><strong>Download:</strong> Save the PDF to your computer</li>
-                    <li><strong>Delete:</strong> Remove the material from the system</li>
-                </ul>
                 
                 <div class="alert alert-info">
                     <i class="fas fa-info-circle me-2"></i> Currently, only PDF files are supported for course materials.
                 </div>
             </div>
         </div>
-        
-        <div class="card mb-4" id="export-data">
-            <div class="card-header bg-primary text-white">
-                <h4 class="mb-0">Exporting Data</h4>
-            </div>
-            <div class="card-body">
-                <h5>Exporting the Timetable</h5>
-                <ol>
-                    <li>Go to the <strong>Timetable</strong> page from the navigation menu</li>
-                    <li>Click the <strong>Export CSV</strong> button</li>
-                    <li>A CSV file will be downloaded containing the complete timetable</li>
-                </ol>
-                
-                <h5>Printing the Timetable</h5>
-                <ol>
-                    <li>Go to the <strong>Timetable</strong> page from the navigation menu</li>
-                    <li>Choose the view you want to print (By Day, By Course, etc.)</li>
-                    <li>Click the <strong>Print Timetable</strong> button</li>
-                    <li>Use your browser's print dialog to print or save as PDF</li>
-                </ol>
-            </div>
-        </div>
-        
-        <div class="card mb-4" id="import-data">
-            <div class="card-header bg-primary text-white">
-                <h4 class="mb-0">Importing Data</h4>
-            </div>
-            <div class="card-body">
-                <h5>Importing CSV Data</h5>
-                <ol>
-                    <li>Click the <strong>Upload</strong> button in the navigation bar</li>
-                    <li>Select <strong>CSV Data Import</strong> tab</li>
-                    <li>Choose the data type you want to import</li>
-                    <li>Upload your CSV file with the appropriate format</li>
-                </ol>
-                
-                <h5>Importing Complete Timetable</h5>
-                <ol>
-                    <li>Go to the <strong>Timetable</strong> page from the navigation menu</li>
-                    <li>Click the <strong>Import Timetable</strong> button</li>
-                    <li>Upload a timetable CSV file that contains scheduling information</li>
-                    <li>The system will automatically assign time slots, classrooms and instructors based on the file</li>
-                    <li>After importing, you can click <strong>Generate Timetable</strong> to resolve any scheduling conflicts</li>
-                </ol>
-                
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle me-2"></i> <strong>Pro Tip:</strong> You can export a timetable, make changes in a spreadsheet application, and then import it back to apply those changes.
-                </div>
-            </div>
-        </div>
+      
         
         <div class="card mb-4" id="troubleshooting">
             <div class="card-header bg-primary text-white">
