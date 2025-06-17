@@ -31,31 +31,7 @@
                             <i class="fas fa-home me-1"></i> Home
                         </a>
                     </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-database me-1"></i> Resources
-                        </a>                        <ul class="dropdown-menu dropdown-menu-end shadow">
-                            <li><a class="dropdown-item" href="{{ url_for('courses.courses') }}">
-                                <i class="fas fa-book me-2"></i> Courses
-                            </a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('instructors.instructors') }}">
-                                <i class="fas fa-chalkboard-teacher me-2"></i> Instructors
-                            </a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('classrooms.classrooms') }}">
-                                <i class="fas fa-door-open me-2"></i> Classrooms
-                            </a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('timeslots.timeslots') }}">
-                                <i class="fas fa-clock me-2"></i> Time Slots
-                            </a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('students.students') }}">
-                                <i class="fas fa-user-graduate me-2"></i> Students
-                            </a></li>
-                        </ul>
-                    </li>                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('scheduler.scheduler_view') }}">
-                            <i class="fas fa-cogs me-1"></i> Scheduler
-                        </a>
-                    </li>
+                                 
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('scheduler.timetable') }}">
                             <i class="fas fa-table me-1"></i> Timetable
@@ -66,16 +42,8 @@
                             <i class="fas fa-project-diagram me-1"></i> Graph
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('conflicts.view_conflicts') }}">
-                            <i class="fas fa-exclamation-triangle me-1"></i> Conflicts
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link btn btn-upload" href="#" data-bs-toggle="modal" data-bs-target="#uploadModal">
-                            <i class="fas fa-upload me-1"></i> Upload
-                        </a>
-                    </li>
+                   
+                
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('user_guide') }}">
                             <i class="fas fa-question-circle me-1"></i> User Guide
@@ -113,98 +81,6 @@
             </div>
         </div>
     </footer>
-
-    <!-- File upload form modal -->
-    <div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="uploadModalLabel">Upload Data or Documents</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <ul class="nav nav-tabs mb-3" id="uploadTabs" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="csv-tab" data-bs-toggle="tab" data-bs-target="#csv-content" type="button" role="tab">CSV Data Import</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="pdf-tab" data-bs-toggle="tab" data-bs-target="#pdf-content" type="button" role="tab">PDF Documents</button>
-                        </li>
-                    </ul>
-                    
-                    <div class="tab-content" id="uploadTabsContent">
-                        <!-- CSV Upload Tab -->
-                        <div class="tab-pane fade show active" id="csv-content" role="tabpanel">
-                            <form action="/upload" method="post" enctype="multipart/form-data">
-                                <div class="mb-3">
-                                    <label for="dataType" class="form-label">Data Type</label>
-                                    <select class="form-select" id="dataType" name="dataType">
-                                        <option value="courses">Courses</option>
-                                        <option value="instructors">Instructors</option>
-                                        <option value="classrooms">Classrooms</option>
-                                        <option value="timeslots">Time Slots</option>
-                                        <option value="students">Students</option>
-                                        <option value="enrollments">Student Enrollments</option>
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="fileUpload" class="form-label">Choose CSV File</label>
-                                    <input class="form-control" type="file" id="fileUpload" name="fileUpload" accept=".csv">
-                                    <div class="form-text">Upload a CSV file with the appropriate format for the selected data type.</div>
-                                </div>
-                                <div class="d-flex justify-content-end">
-                                    <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
-                                    <button type="submit" class="btn btn-primary">Upload</button>
-                                </div>
-                            </form>
-                        </div>
-                        
-                        <!-- PDF Upload Tab -->
-                        <div class="tab-pane fade" id="pdf-content" role="tabpanel">
-                            <form action="/upload" method="post" enctype="multipart/form-data">
-                                <div class="mb-3">
-                                    <label for="document_type" class="form-label">Document Type</label>
-                                    <select class="form-select" id="document_type" name="document_type">
-                                        <option value="syllabus">Syllabus</option>
-                                        <option value="timetable">Timetable Document</option>
-                                        <option value="course_material">Course Material</option>
-                                        <option value="schedule">Schedule Document</option>
-                                    </select>
-                                </div>
-                                <div class="mb-3 course-selector" style="display: none;">
-                                    <label for="pdf_course_id" class="form-label">Select Course</label>
-                                    <select class="form-select" id="pdf_course_id" name="course_id">
-                                        <option value="">-- Select a course --</option>
-                                        {% for course in courses_for_upload %}
-                                        <option value="{{ course.id }}">{{ course.code }}: {{ course.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="material_name" class="form-label">Document Name (optional)</label>
-                                    <input type="text" class="form-control" id="material_name" name="material_name" placeholder="Enter a name for this document">
-                                </div>
-                                <div class="mb-3">
-                                    <label for="pdfFileUpload" class="form-label">Choose PDF File</label>
-                                    <input class="form-control" type="file" id="pdfFileUpload" name="fileUpload" accept=".pdf" required>
-                                    <div class="form-text">Upload a PDF document for the selected document type.</div>
-                                </div>
-                                <div class="d-flex justify-content-end">
-                                    <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
-                                    <button type="submit" class="btn btn-primary">Upload</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Dark mode toggle button -->
-    <div class="dark-mode-toggle" id="darkModeToggle">
-        <i class="fas fa-moon"></i>
-    </div>
 
     <!-- Bootstrap and custom JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
