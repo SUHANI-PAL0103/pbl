@@ -155,69 +155,38 @@
 {% block content %}
 <div class="row">
     <div class="col-md-12">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="display-5">Interactive Timetable</h1>
-            <div class="d-flex gap-2">
-                <form action="{{ url_for('scheduler.run_scheduler') }}" method="POST">
-                    <button class="btn btn-primary" type="submit">
-                        <i class="fas fa-magic me-2"></i> Generate Timetable
-                    </button>
-                </form>
-                <form action="{{ url_for('scheduler.reset_schedule') }}" method="POST" class="ms-2">
-                    <button class="btn btn-outline-danger confirm-action" type="submit">
-                        <i class="fas fa-trash-alt me-2"></i> Reset Schedule
-                    </button>
-                </form>
-                <a href="{{ url_for('scheduler.export_timetable') }}" class="btn btn-success ms-2">
-                    <i class="fas fa-file-csv me-2"></i> Export CSV
-                </a>
-                <button class="btn btn-primary ms-2" type="button" data-bs-toggle="modal" data-bs-target="#importTimetableModal">
-                    <i class="fas fa-file-import me-2"></i> Import Timetable
-                </button>
-                <div class="dropdown ms-2">
-                    <button class="btn btn-info dropdown-toggle" type="button" id="manualAssignDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="fas fa-calendar-plus me-2"></i> Manual Assignment
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="manualAssignDropdown">
-                        {% for course in courses %}
-                            <li><a class="dropdown-item" href="{{ url_for('scheduler.assign_course', course_id=course.id) }}">{{ course.code }}: {{ course.name }}</a></li>
-                        {% endfor %}
-                    </ul>
-                </div>
-                <button class="btn btn-outline-secondary ms-2" onclick="window.print()">
-                    <i class="fas fa-print me-2"></i> Print Timetable
-                </button>
-            </div>
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div class="d-flex gap-2">
+        <form action="{{ url_for('scheduler.run_scheduler') }}" method="POST">
+            <button class="btn btn-primary" type="submit">
+                <i class="fas fa-magic me-2"></i> Generate Timetable
+            </button>
+        </form>
+        <form action="{{ url_for('scheduler.reset_schedule') }}" method="POST" class="ms-2">
+            <button class="btn btn-outline-danger confirm-action" type="submit">
+                <i class="fas fa-trash-alt me-2"></i> Reset Schedule
+            </button>   
+        </form>
+        <div class="dropdown ms-2">
+            <button class="btn btn-info dropdown-toggle" type="button" id="manualAssignDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-calendar-plus me-2"></i> Manual Assignment
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="manualAssignDropdown">
+                {% for course in courses %}
+                    <li><a class="dropdown-item" href="{{ url_for('scheduler.assign_course', course_id=course.id) }}">{{ course.code }}: {{ course.name }}</a></li>
+                {% endfor %}
+            </ul>
         </div>
+    </div>
+
+    <!-- Moved search input here -->
+    <div style="min-width: 250px;">
+        <input type="text" class="form-control" id="filterInput" placeholder="Search Courses ">
+    </div>
+</div>
+  
+      
         
-        <!-- Filter options -->
-        <div class="card mb-4 animate-on-scroll fade-in-up">
-            <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col-md-3">
-                        <label for="filterInput" class="form-label"><i class="fas fa-search me-2"></i>Search Courses:</label>
-                        <input type="text" class="form-control" id="filterInput" placeholder="Enter course code or name">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label mb-2"><i class="fas fa-filter me-2"></i>Filter By:</label>
-                        <div class="d-flex flex-wrap gap-2">
-                            <button class="btn btn-sm btn-outline-primary filter-btn active" data-filter="all">All</button>
-                            <button class="btn btn-sm btn-outline-primary filter-btn" data-filter="scheduled">Scheduled</button>
-                            <button class="btn btn-sm btn-outline-primary filter-btn" data-filter="unscheduled">Unscheduled</button>
-                            <button class="btn btn-sm btn-outline-primary filter-btn" data-filter="instructor">With Instructor</button>
-                            <button class="btn btn-sm btn-outline-primary filter-btn" data-filter="no-instructor">No Instructor</button>
-                        </div>
-                    </div>
-                    <div class="col-md-3 text-end">
-                        <label class="form-label mb-2"><i class="fas fa-fill-drip me-2"></i>Color Theme:</label>
-                        <div class="d-flex justify-content-end gap-2">
-                            <button class="btn btn-sm btn-outline-primary" id="colorByInstructor">By Instructor</button>
-                            <button class="btn btn-sm btn-outline-primary" id="colorByCourse">By Course</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
         
         <div class="card animate-on-scroll fade-in-up">
             <div class="card-header">
@@ -657,34 +626,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<!-- Import Timetable Modal -->
-<div class="modal fade" id="importTimetableModal" tabindex="-1" aria-labelledby="importTimetableModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="importTimetableModalLabel">Import Timetable CSV</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form action="{{ url_for('data_import.upload_data') }}" method="post" enctype="multipart/form-data">
-                    <div class="mb-3">
-                        <label for="timetableFile" class="form-label">Choose Timetable CSV File</label>
-                        <input class="form-control" type="file" id="timetableFile" name="timetableFile" accept=".csv" required>
-                        <div class="form-text">
-                            Upload a timetable CSV file exported from this system or prepared in the same format.
-                            This will automatically assign time slots, classrooms, and instructors to courses.
-                        </div>
-                    </div>
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle me-2"></i> After importing the timetable, you can click "Generate Timetable" to apply the graph coloring algorithm to resolve any conflicts.
-                    </div>
-                    <div class="d-flex justify-content-end">
-                        <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Import Timetable</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
 {% endblock %}
