@@ -164,6 +164,7 @@ a:hover {
     transition: var(--transition-normal);
     background-color: white;
     position: relative;
+    width: 1100px;
 }
 
 .card::before {
