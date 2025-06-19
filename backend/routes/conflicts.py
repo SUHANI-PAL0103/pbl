@@ -17,21 +17,32 @@ def view_conflicts():
         # Get student's scheduled courses
         student_courses = [c for c in student.courses if c.time_slot_id is not None]
         
-        # Group courses by time slot
-        courses_by_timeslot = {}
-        for course in student_courses:
-            if course.time_slot_id not in courses_by_timeslot:
-                courses_by_timeslot[course.time_slot_id] = []
-            courses_by_timeslot[course.time_slot_id].append(course)
-        
-        # Find conflicts (more than one course in a time slot)
-        for time_slot_id, courses in courses_by_timeslot.items():
-            if len(courses) > 1:
-                student_conflicts.append({
-                    'student': student,
-                    'time_slot': TimeSlot.query.get(time_slot_id),
-                    'courses': courses
-                })
+        # Check each pair of courses for time conflicts
+        for i in range(len(student_courses)):
+            for j in range(i + 1, len(student_courses)):
+                course1 = student_courses[i]
+                course2 = student_courses[j]
+                
+                # Get timeslots
+                time1 = TimeSlot.query.get(course1.time_slot_id)
+                time2 = TimeSlot.query.get(course2.time_slot_id)
+                
+                # Check if timeslots overlap
+                if time1 and time2 and time1.day == time2.day:
+                    # Convert times to comparable format
+                    start1 = time1.start_time
+                    end1 = time1.end_time
+                    start2 = time2.start_time
+                    end2 = time2.end_time
+                    
+                    # Check for overlap
+                    if (start1 <= start2 < end1) or (start1 < end2 <= end1) or (start2 <= start1 < end2):
+                        student_conflicts.append({
+                            'student': student,
+                            'time_slot1': time1,
+                            'time_slot2': time2,
+                            'courses': [course1, course2]
+                        })
     
     # Find instructor conflicts (instructor assigned to multiple courses in same time slot)
     instructor_conflicts = []
@@ -44,21 +55,32 @@ def view_conflicts():
             Course.time_slot_id.isnot(None)
         ).all()
         
-        # Group courses by time slot
-        courses_by_timeslot = {}
-        for course in instructor_courses:
-            if course.time_slot_id not in courses_by_timeslot:
-                courses_by_timeslot[course.time_slot_id] = []
-            courses_by_timeslot[course.time_slot_id].append(course)
-        
-        # Find conflicts (more than one course in a time slot)
-        for time_slot_id, courses in courses_by_timeslot.items():
-            if len(courses) > 1:
-                instructor_conflicts.append({
-                    'instructor': instructor,
-                    'time_slot': TimeSlot.query.get(time_slot_id),
-                    'courses': courses
-                })
+        # Check each pair of courses for time conflicts
+        for i in range(len(instructor_courses)):
+            for j in range(i + 1, len(instructor_courses)):
+                course1 = instructor_courses[i]
+                course2 = instructor_courses[j]
+                
+                # Get timeslots
+                time1 = TimeSlot.query.get(course1.time_slot_id)
+                time2 = TimeSlot.query.get(course2.time_slot_id)
+                
+                # Check if timeslots overlap
+                if time1 and time2 and time1.day == time2.day:
+                    # Convert times to comparable format (assuming times are stored as strings like "HH:MM")
+                    start1 = time1.start_time
+                    end1 = time1.end_time
+                    start2 = time2.start_time
+                    end2 = time2.end_time
+                    
+                    # Check for overlap
+                    if (start1 <= start2 < end1) or (start1 < end2 <= end1) or (start2 <= start1 < end2):
+                        instructor_conflicts.append({
+                            'instructor': instructor,
+                            'time_slot1': time1,
+                            'time_slot2': time2,
+                            'courses': [course1, course2]
+                        })
     
     # Find classroom conflicts (multiple courses in same classroom at same time)
     classroom_conflicts = []
@@ -145,30 +167,63 @@ def view_graph():
         # Add edges for student enrollment conflicts
         student_courses = defaultdict(list)
         for course in courses:
-            for student in course.students:
-                student_courses[student.id].append(course.id)
+            if course.time_slot_id:  # Only consider courses with assigned timeslots
+                for student in course.students:
+                    student_courses[student.id].append(course)
         
-        # Create edges between courses that share students
-        for student_id, course_ids in student_courses.items():
-            for i in range(len(course_ids)):
-                for j in range(i + 1, len(course_ids)):
-                    if not G.has_edge(course_ids[i], course_ids[j]):
-                        G.add_edge(course_ids[i], course_ids[j], conflict_type='student')
-                        conflicts_found += 1
+        # Create edges between courses that share students AND have overlapping times
+        for student_id, student_course_list in student_courses.items():
+            for i in range(len(student_course_list)):
+                for j in range(i + 1, len(student_course_list)):
+                    course1 = student_course_list[i]
+                    course2 = student_course_list[j]
+                    
+                    # Get timeslots
+                    time1 = TimeSlot.query.get(course1.time_slot_id)
+                    time2 = TimeSlot.query.get(course2.time_slot_id)
+                    
+                    # Only add edge if there's a time conflict
+                    if time1 and time2 and time1.day == time2.day:
+                        # Check for time overlap
+                        start1 = time1.start_time
+                        end1 = time1.end_time
+                        start2 = time2.start_time
+                        end2 = time2.end_time
+                        
+                        if (start1 <= start2 < end1) or (start1 < end2 <= end1) or (start2 <= start1 < end2):
+                            if not G.has_edge(course1.id, course2.id):
+                                G.add_edge(course1.id, course2.id, conflict_type='student')
+                                conflicts_found += 1
         
         # Add edges for instructor conflicts
         instructor_courses = defaultdict(list)
         for course in courses:
-            if course.instructor_id:
-                instructor_courses[course.instructor_id].append(course.id)
+            if course.instructor_id and course.time_slot_id:
+                instructor_courses[course.instructor_id].append(course)
         
-        # Create edges between courses that share instructors
-        for instructor_id, course_ids in instructor_courses.items():
-            for i in range(len(course_ids)):
-                for j in range(i + 1, len(course_ids)):
-                    if not G.has_edge(course_ids[i], course_ids[j]):
-                        G.add_edge(course_ids[i], course_ids[j], conflict_type='instructor')
-                        conflicts_found += 1
+        # Create edges between courses that share instructors AND have overlapping times
+        for instructor_id, instructor_course_list in instructor_courses.items():
+            for i in range(len(instructor_course_list)):
+                for j in range(i + 1, len(instructor_course_list)):
+                    course1 = instructor_course_list[i]
+                    course2 = instructor_course_list[j]
+                    
+                    # Get timeslots
+                    time1 = TimeSlot.query.get(course1.time_slot_id)
+                    time2 = TimeSlot.query.get(course2.time_slot_id)
+                    
+                    # Only add edge if there's a time conflict
+                    if time1 and time2 and time1.day == time2.day:
+                        # Check for time overlap
+                        start1 = time1.start_time
+                        end1 = time1.end_time
+                        start2 = time2.start_time
+                        end2 = time2.end_time
+                        
+                        if (start1 <= start2 < end1) or (start1 < end2 <= end1) or (start2 <= start1 < end2):
+                            if not G.has_edge(course1.id, course2.id):
+                                G.add_edge(course1.id, course2.id, conflict_type='instructor')
+                                conflicts_found += 1
         
         # Add edges for classroom conflicts (same time and room)
         time_classroom_courses = defaultdict(list)
@@ -291,63 +346,63 @@ def view_graph():
         return render_template('graph.html', 
                              error_message=f"Failed to generate graph: {str(e)}",
                              graph_image=None)
-    for student in Student.query.all():
-        student_courses = student.courses
-        for i, course1 in enumerate(student_courses):
-            for course2 in student_courses[i+1:]:
-                if G.has_edge(course1.id, course2.id):
-                    # Edge already exists, increment weight
-                    G[course1.id][course2.id]['weight'] += 1
-                else:
-                    # Add new edge with weight 1
-                    G.add_edge(course1.id, course2.id, weight=1, type='student')
+    # for student in Student.query.all():
+    #     student_courses = student.courses
+    #     for i, course1 in enumerate(student_courses):
+    #         for course2 in student_courses[i+1:]:
+    #             if G.has_edge(course1.id, course2.id):
+    #                 # Edge already exists, increment weight
+    #                 G[course1.id][course2.id]['weight'] += 1
+    #             else:
+    #                 # Add new edge with weight 1
+    #                 G.add_edge(course1.id, course2.id, weight=1, type='student')
     
-    # Add edges for instructor conflicts
-    for instructor in Instructor.query.all():
-        instructor_courses = Course.query.filter_by(instructor_id=instructor.id).all()
-        for i, course1 in enumerate(instructor_courses):
-            for course2 in instructor_courses[i+1:]:
-                # Add edge with high weight for instructor conflicts
-                if G.has_edge(course1.id, course2.id):
-                    G[course1.id][course2.id]['weight'] = 10
-                    G[course1.id][course2.id]['type'] = 'instructor'
-                else:
-                    G.add_edge(course1.id, course2.id, weight=10, type='instructor')
+    # # Add edges for instructor conflicts
+    # for instructor in Instructor.query.all():
+    #     instructor_courses = Course.query.filter_by(instructor_id=instructor.id).all()
+    #     for i, course1 in enumerate(instructor_courses):
+    #         for course2 in instructor_courses[i+1:]:
+    #             # Add edge with high weight for instructor conflicts
+    #             if G.has_edge(course1.id, course2.id):
+    #                 G[course1.id][course2.id]['weight'] = 10
+    #                 G[course1.id][course2.id]['type'] = 'instructor'
+    #             else:
+    #                 G.add_edge(course1.id, course2.id, weight=10, type='instructor')
     
-    if not courses:
-        return render_template('graph.html', 
-                             error_message="No courses available to generate graph.")
+    # if not courses:
+    #     return render_template('graph.html', 
+    #                          error_message="No courses available to generate graph.")
     
-    # Generate graph image
-    plt.figure(figsize=(12, 8))
-    pos = nx.spring_layout(G) if G.nodes() else {}
+    # # Generate graph image
+    # plt.figure(figsize=(12, 8))
+    # pos = nx.spring_layout(G) if G.nodes() else {}
     
-    # Draw regular edges (student conflicts)
-    student_edges = [(u, v) for u, v, d in G.edges(data=True) if d.get('type') == 'student']
-    if student_edges:
-        nx.draw_networkx_edges(G, pos, edgelist=student_edges, width=1, alpha=0.5, edge_color='gray')
+    # # Draw regular edges (student conflicts)
+    # student_edges = [(u, v) for u, v, d in G.edges(data=True) if d.get('type') == 'student']
+    # if student_edges:
+    #     nx.draw_networkx_edges(G, pos, edgelist=student_edges, width=1, alpha=0.5, edge_color='gray')
     
-    # Draw instructor conflict edges
-    instructor_edges = [(u, v) for u, v, d in G.edges(data=True) if d.get('type') == 'instructor']
-    if instructor_edges:
-        nx.draw_networkx_edges(G, pos, edgelist=instructor_edges, width=2, alpha=0.7, edge_color='red')
+    # # Draw instructor conflict edges
+    # instructor_edges = [(u, v) for u, v, d in G.edges(data=True) if d.get('type') == 'instructor']
+    # if instructor_edges:
+    #     nx.draw_networkx_edges(G, pos, edgelist=instructor_edges, width=2, alpha=0.7, edge_color='red')
     
-    # Draw nodes
-    if G.nodes():
-        nx.draw_networkx_nodes(G, pos, node_size=500, node_color='lightblue')
+    # # Draw nodes
+    # if G.nodes():
+    #     nx.draw_networkx_nodes(G, pos, node_size=500, node_color='lightblue')
         
-        # Draw labels
-        course_labels = {course.id: course.code for course in courses}
-        nx.draw_networkx_labels(G, pos, labels=course_labels, font_size=10)
+    #     # Draw labels
+    #     course_labels = {course.id: course.code for course in courses}
+    #     nx.draw_networkx_labels(G, pos, labels=course_labels, font_size=10)
     
-    plt.title("Course Conflict Graph")
-    plt.axis('off')
+    # plt.title("Course Conflict Graph")
+    # plt.axis('off')
     
-    # Save to buffer
-    img_buf = io.BytesIO()
-    plt.savefig(img_buf, format='png', bbox_inches='tight', dpi=100)
-    img_buf.seek(0)
-    img_data = base64.b64encode(img_buf.read()).decode('utf-8')
-    plt.close()
+    # # Save to buffer
+    # img_buf = io.BytesIO()
+    # plt.savefig(img_buf, format='png', bbox_inches='tight', dpi=100)
+    # img_buf.seek(0)
+    # img_data = base64.b64encode(img_buf.read()).decode('utf-8')
+    # plt.close()
     
-    return render_template('graph.html', graph_image=img_data)
+    # return render_template('graph.html', graph_image=img_data)

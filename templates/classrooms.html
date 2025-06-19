@@ -11,9 +11,7 @@
                 <a href="{{ url_for('classrooms.add_classroom') }}" class="btn btn-primary">
                     <i class="fas fa-plus me-2"></i> Add Classroom
                 </a>
-                <button type="button" class="btn btn-outline-primary ms-2" data-bs-toggle="modal" data-bs-target="#uploadModal">
-                    <i class="fas fa-upload me-2"></i> Import CSV
-                </button>
+               
             </div>
         </div>
         
@@ -91,37 +89,6 @@
     </div>
 </div>
 
-<!-- CSV Upload Modal -->
-<div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="uploadModalLabel">Import Classrooms from CSV</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form action="{{ url_for('data_import.upload_data') }}" method="post" enctype="multipart/form-data">
-                <div class="modal-body">                    <div class="mb-3">
-                        <label for="csvFile" class="form-label">Choose CSV File</label>
-                        <input type="file" class="form-control" id="csvFile" name="fileUpload" accept=".csv" required>
-                        <input type="hidden" name="dataType" value="classrooms">
-                    </div>
-                    <div class="alert alert-info">
-                        <h6>CSV Format Requirements:</h6>
-                        <ul class="mb-0">
-                            <li>Columns: name, capacity</li>
-                            <li>Example: "Room 101", 30</li>
-                            <li>First row should contain headers</li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Import Classrooms</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 {% endblock %}
 
 {% block extra_js %}
